@@ -30,14 +30,24 @@ export default async function DashboardPage() {
   let pendingAppsForMe: any[] = [];
   
   if (myTentIds.length > 0 || myCarIds.length > 0) {
-    const { data } = await supabase
+    const { data: rawApps } = await supabase
       .schema('focus_festival')
-      .from('applications')
-      .select('*, applicant:users!applicant_id(first_name, last_name, gender)')
+      .from('applications_with_applicant')
+      .select('*')
       .in('resource_id', [...myTentIds, ...myCarIds])
       .eq('status', 'PENDING');
     
-    pendingAppsForMe = data || [];
+    if (rawApps) {
+      pendingAppsForMe = rawApps.map((a: any) => ({
+        ...a,
+        applicant: {
+          id: a.applicant_id,
+          first_name: a.applicant_first_name,
+          last_name: a.applicant_last_name,
+          gender: a.applicant_gender
+        }
+      }));
+    }
   }
 
   // Fetch applications I made

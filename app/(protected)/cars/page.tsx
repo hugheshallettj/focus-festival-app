@@ -8,11 +8,21 @@ import { Car } from "lucide-react";
 export default async function CarsListingPage() {
   const supabase = await createClient();
   
-  const { data: cars, error } = await supabase
+  const { data: rawCars, error } = await supabase
     .schema('focus_festival')
-    .from('cars')
-    .select('id, capacity, remaining_spaces, departure_time, return_time, location, description, created_at, driver:users!driver_id(id, first_name, last_name, gender)')
+    .from('cars_with_driver')
+    .select('*')
     .order('departure_time', { ascending: true });
+
+  const cars = rawCars?.map((c: any) => ({
+    ...c,
+    driver: {
+      id: c.driver_id,
+      first_name: c.driver_first_name,
+      last_name: c.driver_last_name,
+      gender: c.driver_gender
+    }
+  }));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

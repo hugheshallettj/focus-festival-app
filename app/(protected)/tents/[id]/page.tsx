@@ -12,12 +12,22 @@ export default async function TentDetailsPage({ params }: { params: { id: string
   if (!user) return redirect("/auth/login");
 
   // Fetch tent details
-  const { data: tent, error: tentError } = await supabase
+  const { data: rawTent, error: tentError } = await supabase
     .schema('focus_festival')
-    .from('tents')
-    .select('*, host:users!host_id(id, first_name, last_name, gender)')
+    .from('tents_with_host')
+    .select('*')
     .eq('id', params.id)
     .single();
+
+  const tent = rawTent ? {
+    ...rawTent,
+    host: {
+      id: rawTent.host_id,
+      first_name: rawTent.host_first_name,
+      last_name: rawTent.host_last_name,
+      gender: rawTent.host_gender
+    }
+  } : null;
 
   if (tentError || !tent) return notFound();
 

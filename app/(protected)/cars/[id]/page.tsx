@@ -12,12 +12,22 @@ export default async function CarDetailsPage({ params }: { params: { id: string 
   if (!user) return redirect("/auth/login");
 
   // Fetch car details
-  const { data: car, error: carError } = await supabase
+  const { data: rawCar, error: carError } = await supabase
     .schema('focus_festival')
-    .from('cars')
-    .select('*, driver:users!driver_id(id, first_name, last_name, gender)')
+    .from('cars_with_driver')
+    .select('*')
     .eq('id', params.id)
     .single();
+
+  const car = rawCar ? {
+    ...rawCar,
+    driver: {
+      id: rawCar.driver_id,
+      first_name: rawCar.driver_first_name,
+      last_name: rawCar.driver_last_name,
+      gender: rawCar.driver_gender
+    }
+  } : null;
 
   if (carError || !car) return notFound();
 

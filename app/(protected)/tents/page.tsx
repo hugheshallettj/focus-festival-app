@@ -14,11 +14,21 @@ export default async function TentsListingPage() {
   // We can use `.schema('focus_festival')` if supported, or rely on views.
   
   // Since we haven't generated types, we will just use the schema method.
-  const { data: tents, error } = await supabase
+  const { data: rawTents, error } = await supabase
     .schema('focus_festival')
-    .from('tents')
-    .select('id, capacity, remaining_spaces, same_sex_only, gender_required, description, created_at, host:users!host_id(id, first_name, last_name, gender)')
+    .from('tents_with_host')
+    .select('*')
     .order('created_at', { ascending: false });
+
+  const tents = rawTents?.map((t: any) => ({
+    ...t,
+    host: {
+      id: t.host_id,
+      first_name: t.host_first_name,
+      last_name: t.host_last_name,
+      gender: t.host_gender
+    }
+  }));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
