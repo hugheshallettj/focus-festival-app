@@ -105,7 +105,7 @@ export default async function TentDetailsPage({ params }: { params: { id: string
           <p className="font-semibold">You are the host of this tent.</p>
         </div>
       ) : (
-        <form action={applyForResource}>
+        <form action={async (formData: FormData) => { "use server"; await applyForResource(formData); }}>
           <input type="hidden" name="resource_id" value={tent.id} />
           <input type="hidden" name="resource_type" value="TENT" />
           <Button type="submit" size="lg" className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]">

@@ -1,5 +1,4 @@
 "use client";
-
 import { createCar } from "@/app/actions/resources";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +26,7 @@ export default function NewCarPage() {
           <CardDescription>Provide information about your journey to and from the festival.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createCar} className="space-y-6">
+          <form action={createCar as any} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="location">Departure Location</Label>
               <Input id="location" name="location" required placeholder="e.g. London Kings Cross" />
