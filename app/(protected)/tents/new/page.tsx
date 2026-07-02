@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { createTent } from "@/app/actions/resources";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export default function NewTentPage() {
           <CardDescription>Tell us about the space you're offering.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createTent} className="space-y-6">
+          <form action={createTent as any} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="capacity">Available Spaces</Label>
               <Input id="capacity" name="capacity" type="number" min="1" max="10" required placeholder="e.g. 2" />

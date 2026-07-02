@@ -31,7 +31,7 @@ export default async function OnboardingPage() {
           To ensure community safety and respect privacy preferences for tent sharing, we need to know your gender. This will only be used for strict gender-matching rules.
         </p>
 
-        <form action={setGenderAction} className="space-y-6">
+        <form action={async (formData: FormData) => { "use server"; await setGenderAction(formData); }} className="space-y-6">
           <div className="space-y-4">
             <label className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent transition-colors">
               <input

@@ -149,7 +149,7 @@ export default async function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4 flex justify-end gap-3">
-                  <form action={processApplication}>
+                  <form action={async (formData: FormData) => { "use server"; await processApplication(formData); }}>
                     <input type="hidden" name="application_id" value={app.id} />
                     <input type="hidden" name="action" value="REJECT" />
                     <input type="hidden" name="resource_type" value={app.resource_type} />
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
                       <X className="h-4 w-4 mr-2" /> Reject
                     </Button>
                   </form>
-                  <form action={processApplication}>
+                  <form action={async (formData: FormData) => { "use server"; await processApplication(formData); }}>
                     <input type="hidden" name="application_id" value={app.id} />
                     <input type="hidden" name="action" value="APPROVE" />
                     <input type="hidden" name="resource_type" value={app.resource_type} />

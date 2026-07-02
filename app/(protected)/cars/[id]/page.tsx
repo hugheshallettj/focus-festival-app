@@ -1,12 +1,14 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Car, Clock, MapPin } from "lucide-react";
+import { Car, Clock, MapPin, User } from "lucide-react";
 import { UserProfileModal } from "@/components/user-profile-modal";
 import { applyForResource } from "@/app/actions/applications";
 
-export default async function CarDetailsPage({ params }: { params: { id: string } }) {
+export default async function CarDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect("/auth/login");
@@ -16,7 +18,7 @@ export default async function CarDetailsPage({ params }: { params: { id: string 
     .schema('focus_festival')
     .from('cars_with_driver')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single();
 
   const car = rawCar ? {
@@ -54,6 +56,7 @@ export default async function CarDetailsPage({ params }: { params: { id: string 
             <span className="font-medium flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground"/> Departure Location</span>
             <span className="text-lg font-medium">{car.location}</span>
           </div>
+          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
             <span className="font-medium flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground"/> Departure Time</span>
             <span className="text-lg">{new Date(car.departure_time).toLocaleString()}</span>
           </div>
@@ -93,7 +96,7 @@ export default async function CarDetailsPage({ params }: { params: { id: string 
           <p className="font-semibold">You are the driver of this car.</p>
         </div>
       ) : (
-        <form action={applyForResource}>
+        <form action={async (formData: FormData) => { "use server"; await applyForResource(formData); }}>
           <input type="hidden" name="resource_id" value={car.id} />
           <input type="hidden" name="resource_type" value="CAR" />
           <Button type="submit" size="lg" className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]">
