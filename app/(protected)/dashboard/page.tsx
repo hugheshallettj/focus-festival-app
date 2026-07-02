@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Check, X, Clock, Tent, Car, PlusCircle, Search, MapPin } from "lucide-react";
+import { Check, X, Clock, Tent, Car, PlusCircle, Search, MapPin, Trash2 } from "lucide-react";
 import { processApplication } from "@/app/actions/host";
 import { ResourceMembersModal } from "@/components/resource-members-modal";
+import { UserProfileModal } from "@/components/user-profile-modal";
+import { withdrawApplication } from "@/app/actions/withdraw";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -189,7 +191,13 @@ export default async function DashboardPage() {
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       {app.resource_type === 'TENT' ? <Tent className="h-5 w-5" /> : <Car className="h-5 w-5" />}
-                      {app.applicant?.first_name || 'Anonymous'} wants a space
+                      {app.applicant ? (
+                        <span className="flex items-center gap-1">
+                          <UserProfileModal user={app.applicant} role="applicant" /> wants a space
+                        </span>
+                      ) : (
+                        'Anonymous wants a space'
+                      )}
                     </span>
                     <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-500 px-2 py-1 rounded-full flex items-center gap-1">
                       <Clock className="h-3 w-3" /> PENDING
@@ -250,23 +258,34 @@ export default async function DashboardPage() {
                           {app.resource_type === 'TENT' ? 'Tent Space' : 'Car Seat'}
                         </span>
                         {resource && app.resource_type === 'CAR' && (
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {resource.location}
-                          </p>
+                          <div className="text-sm text-muted-foreground flex flex-col gap-2 mt-2">
+                            <p className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {resource.location}</p>
+                            <div className="flex items-center gap-2">
+                              Driver: <UserProfileModal user={{ id: resource.driver_id, first_name: resource.driver_first_name, last_name: resource.driver_last_name, gender: resource.driver_gender, avatar_url: resource.driver_avatar_url, bio: resource.driver_bio, church_name: resource.driver_church_name, service_name: resource.driver_service_name }} role="driver" />
+                            </div>
+                          </div>
                         )}
                         {resource && app.resource_type === 'TENT' && (
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            Hosted by {resource.host_first_name}
-                          </p>
+                          <div className="text-sm text-muted-foreground flex items-center gap-2 mt-2">
+                            Host: <UserProfileModal user={{ id: resource.host_id, first_name: resource.host_first_name, last_name: resource.host_last_name, gender: resource.host_gender, avatar_url: resource.host_avatar_url, bio: resource.host_bio, church_name: resource.host_church_name, service_name: resource.host_service_name }} role="host" />
+                          </div>
                         )}
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
-                        app.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                        app.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                        'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'
-                      }`}>
-                        {app.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                          app.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                          app.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
+                          'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'
+                        }`}>
+                          {app.status}
+                        </span>
+                        <form action={async (formData: FormData) => { "use server"; await withdrawApplication(formData); }}>
+                          <input type="hidden" name="application_id" value={app.id} />
+                          <Button variant="ghost" size="sm" type="submit" className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30" title="Withdraw Application">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </form>
+                      </div>
                     </div>
                     
                     {app.status === 'APPROVED' && resourceMembers.length > 0 && (

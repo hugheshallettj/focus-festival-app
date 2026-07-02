@@ -2,10 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ShieldAlert, Tent, User, Calendar } from "lucide-react";
+import { ShieldAlert, Tent, User, Calendar, Trash2 } from "lucide-react";
 import { UserProfileModal } from "@/components/user-profile-modal";
 import { ResourceMembersModal } from "@/components/resource-members-modal";
 import { applyForResource } from "@/app/actions/applications";
+import { deleteResource } from "@/app/actions/delete-resource";
 
 export default async function TentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -137,8 +138,15 @@ export default async function TentDetailsPage({ params }: { params: Promise<{ id
           <p className="font-semibold">This tent is currently full.</p>
         </div>
       ) : tent.host_id === user.id ? (
-        <div className="p-6 bg-primary/10 text-primary text-center rounded-lg">
-          <p className="font-semibold">You are the host of this tent.</p>
+        <div className="p-6 bg-primary/10 text-primary rounded-lg flex flex-col items-center gap-4 border border-primary/20">
+          <p className="font-semibold">This is your tent listing.</p>
+          <form action={async (formData: FormData) => { "use server"; await deleteResource(formData); }}>
+            <input type="hidden" name="resource_id" value={tent.id} />
+            <input type="hidden" name="resource_type" value="TENT" />
+            <Button variant="destructive" type="submit" className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4" /> Delete Listing
+            </Button>
+          </form>
         </div>
       ) : (
         <form action={async (formData: FormData) => { "use server"; await applyForResource(formData); }}>
