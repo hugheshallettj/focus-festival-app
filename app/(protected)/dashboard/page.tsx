@@ -44,7 +44,8 @@ export default async function DashboardPage() {
           id: a.applicant_id,
           first_name: a.applicant_first_name,
           last_name: a.applicant_last_name,
-          gender: a.applicant_gender
+          gender: a.applicant_gender,
+          avatar_url: a.applicant_avatar_url
         }
       }));
     }

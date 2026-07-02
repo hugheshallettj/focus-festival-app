@@ -26,7 +26,8 @@ export default async function TentsListingPage() {
       id: t.host_id,
       first_name: t.host_first_name,
       last_name: t.host_last_name,
-      gender: t.host_gender
+      gender: t.host_gender,
+      avatar_url: t.host_avatar_url
     }
   }));
 

@@ -6,7 +6,8 @@ import { ShieldAlert, Tent, User, Calendar } from "lucide-react";
 import { UserProfileModal } from "@/components/user-profile-modal";
 import { applyForResource } from "@/app/actions/applications";
 
-export default async function TentDetailsPage({ params }: { params: { id: string } }) {
+export default async function TentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect("/auth/login");
@@ -16,7 +17,7 @@ export default async function TentDetailsPage({ params }: { params: { id: string
     .schema('focus_festival')
     .from('tents_with_host')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   const tent = rawTent ? {
@@ -25,7 +26,8 @@ export default async function TentDetailsPage({ params }: { params: { id: string
       id: rawTent.host_id,
       first_name: rawTent.host_first_name,
       last_name: rawTent.host_last_name,
-      gender: rawTent.host_gender
+      gender: rawTent.host_gender,
+      avatar_url: rawTent.host_avatar_url
     }
   } : null;
 

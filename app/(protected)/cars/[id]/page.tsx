@@ -8,7 +8,7 @@ import { UserProfileModal } from "@/components/user-profile-modal";
 import { applyForResource } from "@/app/actions/applications";
 
 export default async function CarDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect("/auth/login");
@@ -18,7 +18,7 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
     .schema('focus_festival')
     .from('cars_with_driver')
     .select('*')
-    .eq('id', resolvedParams.id)
+    .eq('id', id)
     .single();
 
   const car = rawCar ? {
@@ -27,7 +27,8 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
       id: rawCar.driver_id,
       first_name: rawCar.driver_first_name,
       last_name: rawCar.driver_last_name,
-      gender: rawCar.driver_gender
+      gender: rawCar.driver_gender,
+      avatar_url: rawCar.driver_avatar_url
     }
   } : null;
 

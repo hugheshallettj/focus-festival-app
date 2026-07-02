@@ -20,7 +20,8 @@ export default async function CarsListingPage() {
       id: c.driver_id,
       first_name: c.driver_first_name,
       last_name: c.driver_last_name,
-      gender: c.driver_gender
+      gender: c.driver_gender,
+      avatar_url: c.driver_avatar_url
     }
   }));
 
