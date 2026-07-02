@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ShieldAlert, Tent, User, Calendar } from "lucide-react";
 import { UserProfileModal } from "@/components/user-profile-modal";
+import { ResourceMembersModal } from "@/components/resource-members-modal";
 import { applyForResource } from "@/app/actions/applications";
 
 export default async function TentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,12 +27,37 @@ export default async function TentDetailsPage({ params }: { params: Promise<{ id
       id: rawTent.host_id,
       first_name: rawTent.host_first_name,
       last_name: rawTent.host_last_name,
-      gender: rawTent.host_gender,
-      avatar_url: rawTent.host_avatar_url
+      avatar_url: rawTent.host_avatar_url,
+      bio: rawTent.host_bio,
+      church_name: rawTent.host_church_name,
+      service_name: rawTent.host_service_name
     }
   } : null;
 
   if (tentError || !tent) return notFound();
+
+  // Fetch applicants
+  const { data: approvedApps } = await supabase
+    .schema('focus_festival')
+    .from('applications_with_applicant')
+    .select('*')
+    .eq('resource_id', id)
+    .eq('status', 'APPROVED');
+
+  const tentMembers = approvedApps?.map(a => ({
+    id: a.id,
+    resource_id: a.resource_id,
+    applicant: {
+      id: a.applicant_id,
+      first_name: a.applicant_first_name,
+      last_name: a.applicant_last_name,
+      gender: a.applicant_gender,
+      avatar_url: a.applicant_avatar_url,
+      bio: a.applicant_bio,
+      church_name: a.applicant_church_name,
+      service_name: a.applicant_service_name
+    }
+  })) || [];
 
   // Fetch applicant's profile for Rule A checking
   const { data: profile } = await supabase
@@ -71,6 +97,14 @@ export default async function TentDetailsPage({ params }: { params: Promise<{ id
           <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
             <span className="font-medium">Remaining Spaces</span>
             <span className="text-lg font-bold text-primary">{tent.remaining_spaces} / {tent.capacity}</span>
+          </div>
+          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+            <span className="font-medium text-muted-foreground">Campmates</span>
+            {tentMembers.length > 0 ? (
+              <ResourceMembersModal applications={tentMembers} resourceName="tent" />
+            ) : (
+              <span className="text-sm text-muted-foreground">None yet</span>
+            )}
           </div>
           {tent.description && (
             <div className="p-4 bg-muted/30 rounded-lg border">

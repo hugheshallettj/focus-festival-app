@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Car, Clock, MapPin, User } from "lucide-react";
 import { UserProfileModal } from "@/components/user-profile-modal";
+import { ResourceMembersModal } from "@/components/resource-members-modal";
 import { applyForResource } from "@/app/actions/applications";
 
 export default async function CarDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,12 +28,37 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
       id: rawCar.driver_id,
       first_name: rawCar.driver_first_name,
       last_name: rawCar.driver_last_name,
-      gender: rawCar.driver_gender,
-      avatar_url: rawCar.driver_avatar_url
+      avatar_url: rawCar.driver_avatar_url,
+      bio: rawCar.driver_bio,
+      church_name: rawCar.driver_church_name,
+      service_name: rawCar.driver_service_name
     }
   } : null;
 
   if (carError || !car) return notFound();
+
+  // Fetch applicants
+  const { data: approvedApps } = await supabase
+    .schema('focus_festival')
+    .from('applications_with_applicant')
+    .select('*')
+    .eq('resource_id', id)
+    .eq('status', 'APPROVED');
+
+  const carMembers = approvedApps?.map(a => ({
+    id: a.id,
+    resource_id: a.resource_id,
+    applicant: {
+      id: a.applicant_id,
+      first_name: a.applicant_first_name,
+      last_name: a.applicant_last_name,
+      gender: a.applicant_gender,
+      avatar_url: a.applicant_avatar_url,
+      bio: a.applicant_bio,
+      church_name: a.applicant_church_name,
+      service_name: a.applicant_service_name
+    }
+  })) || [];
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -78,6 +104,14 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
           <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
             <span className="font-medium">Remaining Spaces</span>
             <span className="text-lg font-bold text-primary">{car.remaining_spaces} / {car.capacity}</span>
+          </div>
+          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+            <span className="font-medium text-muted-foreground">Passengers</span>
+            {carMembers.length > 0 ? (
+              <ResourceMembersModal applications={carMembers} resourceName="car" />
+            ) : (
+              <span className="text-sm text-muted-foreground">None yet</span>
+            )}
           </div>
           {car.description && (
             <div className="p-4 bg-muted/30 rounded-lg border">

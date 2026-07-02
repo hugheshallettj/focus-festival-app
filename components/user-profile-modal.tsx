@@ -16,6 +16,9 @@ interface UserProfile {
   last_name: string;
   gender: string;
   avatar_url?: string;
+  bio?: string;
+  church_name?: string;
+  service_name?: string;
 }
 
 export function UserProfileModal({ user, role }: { user: UserProfile, role: string }) {
@@ -50,9 +53,23 @@ export function UserProfileModal({ user, role }: { user: UserProfile, role: stri
               <UserCircle2 className="h-16 w-16" />
             )}
           </div>
-          <div className="text-center space-y-1">
-            <h3 className="font-bold text-xl">{user.first_name} {user.last_name}</h3>
-            <p className="text-muted-foreground capitalize">{user.gender}</p>
+          <div className="text-center space-y-2 w-full">
+            <h3 className="font-bold text-2xl">{user.first_name} {user.last_name}</h3>
+            <p className="text-muted-foreground capitalize font-medium">{user.gender}</p>
+            
+            {user.church_name && (
+              <div className="mt-4 bg-muted/30 p-3 rounded-lg border text-sm flex flex-col items-center gap-1">
+                <span className="font-semibold text-primary">{user.church_name}</span>
+                {user.service_name && <span className="text-muted-foreground">{user.service_name}</span>}
+              </div>
+            )}
+            
+            {user.bio && (
+              <div className="mt-4 text-left w-full">
+                <h4 className="font-semibold text-sm mb-1">About Me</h4>
+                <p className="text-sm text-muted-foreground italic">"{user.bio}"</p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
