@@ -19,6 +19,7 @@ export default async function TentsListingPage() {
     .schema('focus_festival')
     .from('tents_with_host')
     .select('*')
+    .gt('remaining_spaces', 0)
     .order('created_at', { ascending: false });
 
   const tents = rawTents?.map((t: any) => ({

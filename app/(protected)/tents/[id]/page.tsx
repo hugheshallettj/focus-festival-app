@@ -7,6 +7,8 @@ import { UserProfileModal } from "@/components/user-profile-modal";
 import { ResourceMembersModal } from "@/components/resource-members-modal";
 import { applyForResource } from "@/app/actions/applications";
 import { deleteResource } from "@/app/actions/delete-resource";
+import { removeMember } from "@/app/actions/remove-member";
+import { EditResourceModal } from "@/components/edit-resource-modal";
 
 export default async function TentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -99,10 +101,26 @@ export default async function TentDetailsPage({ params }: { params: Promise<{ id
             <span className="font-medium">Remaining Spaces</span>
             <span className="text-lg font-bold text-primary">{tent.remaining_spaces} / {tent.capacity}</span>
           </div>
-          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
-            <span className="font-medium text-muted-foreground">Campmates</span>
+          <div className="flex flex-col p-4 bg-muted/50 rounded-lg">
+            <span className="font-medium text-muted-foreground mb-2">Campmates</span>
             {tentMembers.length > 0 ? (
-              <ResourceMembersModal applications={tentMembers} resourceName="tent" />
+              tent.host_id === user.id ? (
+                <div className="flex flex-col gap-2 w-full mt-2">
+                  {tentMembers.map(member => (
+                    <div key={member.id} className="flex justify-between items-center bg-background p-3 rounded-md border">
+                      <UserProfileModal user={member.applicant} role="applicant" />
+                      <form action={async (formData: FormData) => { "use server"; await removeMember(formData); }}>
+                        <input type="hidden" name="application_id" value={member.id} />
+                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30">
+                          Remove
+                        </Button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ResourceMembersModal applications={tentMembers} resourceName="tent" />
+              )
             ) : (
               <span className="text-sm text-muted-foreground">None yet</span>
             )}
@@ -140,13 +158,16 @@ export default async function TentDetailsPage({ params }: { params: Promise<{ id
       ) : tent.host_id === user.id ? (
         <div className="p-6 bg-primary/10 text-primary rounded-lg flex flex-col items-center gap-4 border border-primary/20">
           <p className="font-semibold">This is your tent listing.</p>
-          <form action={async (formData: FormData) => { "use server"; await deleteResource(formData); }}>
-            <input type="hidden" name="resource_id" value={tent.id} />
-            <input type="hidden" name="resource_type" value="TENT" />
-            <Button variant="destructive" type="submit" className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4" /> Delete Listing
-            </Button>
-          </form>
+          <div className="flex gap-4">
+            <EditResourceModal resource={{ id: tent.id, capacity: tent.capacity, description: tent.description }} resourceType="TENT" />
+            <form action={async (formData: FormData) => { "use server"; await deleteResource(formData); }}>
+              <input type="hidden" name="resource_id" value={tent.id} />
+              <input type="hidden" name="resource_type" value="TENT" />
+              <Button variant="destructive" type="submit" className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4" /> Delete Listing
+              </Button>
+            </form>
+          </div>
         </div>
       ) : (
         <form action={async (formData: FormData) => { "use server"; await applyForResource(formData); }}>

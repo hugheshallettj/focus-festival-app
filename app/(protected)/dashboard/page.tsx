@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   const { data: myTents } = await supabase
     .schema('focus_festival')
     .from('tents')
-    .select('id, capacity, remaining_spaces')
+    .select('*')
     .eq('host_id', user.id);
   
   const myTentIds = myTents?.map(t => t.id) || [];
@@ -27,23 +27,23 @@ export default async function DashboardPage() {
   const { data: myCars } = await supabase
     .schema('focus_festival')
     .from('cars')
-    .select('id, capacity, remaining_spaces')
+    .select('*')
     .eq('driver_id', user.id);
 
   const myCarIds = myCars?.map(c => c.id) || [];
 
   let pendingAppsForMe: any[] = [];
+  let approvedAppsForMySpaces: any[] = [];
   
   if (myTentIds.length > 0 || myCarIds.length > 0) {
     const { data: rawApps } = await supabase
       .schema('focus_festival')
       .from('applications_with_applicant')
       .select('*')
-      .in('resource_id', [...myTentIds, ...myCarIds])
-      .eq('status', 'PENDING');
+      .in('resource_id', [...myTentIds, ...myCarIds]);
     
     if (rawApps) {
-      pendingAppsForMe = rawApps.map((a: any) => ({
+      const formattedApps = rawApps.map((a: any) => ({
         ...a,
         applicant: {
           id: a.applicant_id,
@@ -56,6 +56,8 @@ export default async function DashboardPage() {
           service_name: a.applicant_service_name
         }
       }));
+      pendingAppsForMe = formattedApps.filter(a => a.status === 'PENDING');
+      approvedAppsForMySpaces = formattedApps.filter(a => a.status === 'APPROVED');
     }
   }
 
@@ -174,6 +176,74 @@ export default async function DashboardPage() {
             </Card>
           </Link>
         </div>
+      </section>
+
+      {/* Your Hosted Spaces Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold border-b pb-2">Your Hosted Spaces</h2>
+        {(!myTents?.length && !myCars?.length) ? (
+          <div className="p-8 bg-card rounded-2xl border border-dashed text-center">
+            <p className="text-muted-foreground">You are not hosting any tents or cars.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {myTents?.map(tent => {
+              const members = approvedAppsForMySpaces.filter(a => a.resource_id === tent.id);
+              return (
+                <Card key={tent.id}>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <span className="flex items-center gap-2 font-bold text-lg mb-1">
+                          <Tent className="h-5 w-5 text-primary" /> Your Tent
+                        </span>
+                        <p className="text-sm text-muted-foreground">Spaces left: {tent.remaining_spaces} / {tent.capacity}</p>
+                      </div>
+                      <Link href={`/tents/${tent.id}`}>
+                        <Button variant="outline" size="sm">Manage</Button>
+                      </Link>
+                    </div>
+                    {members.length > 0 && (
+                      <div className="pt-3 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Accepted Campmates</p>
+                        <ResourceMembersModal applications={members} resourceName="tent" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {myCars?.map(car => {
+              const members = approvedAppsForMySpaces.filter(a => a.resource_id === car.id);
+              return (
+                <Card key={car.id}>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <span className="flex items-center gap-2 font-bold text-lg mb-1">
+                          <Car className="h-5 w-5 text-primary" /> Your Car
+                        </span>
+                        <p className="text-sm text-muted-foreground">Spaces left: {car.remaining_spaces} / {car.capacity}</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" /> {car.location}
+                        </p>
+                      </div>
+                      <Link href={`/cars/${car.id}`}>
+                        <Button variant="outline" size="sm">Manage</Button>
+                      </Link>
+                    </div>
+                    {members.length > 0 && (
+                      <div className="pt-3 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Accepted Passengers</p>
+                        <ResourceMembersModal applications={members} resourceName="car" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Host Section */}

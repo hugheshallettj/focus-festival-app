@@ -13,6 +13,7 @@ export default async function CarsListingPage() {
     .schema('focus_festival')
     .from('cars_with_driver')
     .select('*')
+    .gt('remaining_spaces', 0)
     .order('departure_time', { ascending: true });
 
   const cars = rawCars?.map((c: any) => ({
